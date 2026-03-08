@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches and Sessions
+.cache/
+session*.json
+ctfd_status.json
+
+# Local environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Challenge downloads (optional, usually users don't want to push these)
+test_dl/
+**/README.md
+!README.md
+**/files/
