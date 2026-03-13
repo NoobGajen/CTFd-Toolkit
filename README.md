@@ -208,20 +208,36 @@ python3 ctfd-toolkit.py --no-notify --submit -C "Challenge" -f "flag{...}"
 ╰──────────────────────────────────────────────────────────────────────╯
 
   ╭─ Binary Exploitation                                3/3  (100.0%)
-  │  ✓ Hour of Joy                                         230 solves
-  │  ✓ Rude Guard                                          213 solves
-  │  ✓ Small Blind                                         106 solves
+  │  ✓ Hour of Joy                                         248 solves
+  │  ✓ Rude Guard                                          228 solves
+  │  ✓ Small Blind                                         116 solves
   ╰
 
   ╭─ Cryptography                                       3/3  (100.0%)
-  │  ✓ Fortune Teller                                      258 solves
-  │  ✓ Smooth Criminal                                     240 solves
-  │  ✓ Oblivious Error                                     174 solves
+  │  ✓ Fortune Teller                                      273 solves
+  │  ✓ Smooth Criminal                                     254 solves
+  │  ✓ Oblivious Error                                     181 solves
   ╰
 
-  Total:   26  │  Solved:   24  │  Unsolved:    2  │  Progress:  92.3%
+  ╭─ Forensics                                          7/7  (100.0%)
+  │  ✓ Half Awake                                         219 solves
+  │  ✓ Cold Workspace                                     185 solves
+  │  ✓ Last Byte Standing                                 177 solves
+  │  ✓ Silent Archive                                     160 solves
+  │  ✓ Landfall                                           127 solves
+  │  ✓ Watson                                             104 solves
+  │  ✓ Sherlockk                                           86 solves
+  ╰
+
+  ╭─ Web                                                2/3  ( 66.7%)
+  │  ✓ Break the Bank                                      131 solves
+  │  ✓ Time to Pretend                                     112 solves
+  │  ✗ Crab Mentality                                       74 solves
+  ╰
+
+  Total:   26  │  Solved:   25  │  Unsolved:    1  │  Progress:  96.2%
   ──────────────────────────────────────────────────────────────────────
-  [███████████████████████████████████████████████████████████░░░░░░] 24/26
+  [███████████████████████████████████████████████████████████░░░] 25/26
 ```
 
 ### Flag Submission
