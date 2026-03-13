@@ -959,18 +959,6 @@ Environment Variables:
   CTFD_URL      Default target URL
   CTFD_USER     Default username
   CTFD_PASS     Default password
-
-Notification Behavior:
-  Default: Desktop notifications only (silent for incorrect flags)
-  --no-notify:    Disable all notifications
-  --kde-connect:  Enable KDE Connect phone notifications
-  --no-cache:     Disable session caching (login every time)
-  --save-status:   Auto-save challenge status to challenge-status.json
-  
-Notification Urgency:
-  Correct flags:     Normal (visible)
-  Incorrect flags:   Low (silent/minimal)
-  Already solved:    Normal (visible)
         '''
     )
 
