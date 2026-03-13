@@ -159,7 +159,7 @@ class Colors:
     # Box drawing characters
     BOX_TOP_LEFT = '┌'
     BOX_TOP_RIGHT = '┐'
-    BOX_BOTTOM_LEFT = '└'
+    BOX_BOTTOM_LEFT = '╰'
     BOX_BOTTOM_RIGHT = '┘'
     BOX_HORIZONTAL = '─'
     BOX_VERTICAL = '│'
@@ -331,7 +331,7 @@ class CTFdManager:
         """Get total challenge count"""
         return len(self.challenges)
     
-    def show_status(self, auto_save=True):
+    def show_status(self, auto_save=False):
         """Show overall challenge status - Clean compact layout"""
         solved = self.get_solved_count()
         total = self.get_total_count()
@@ -339,18 +339,16 @@ class CTFdManager:
         
         print()
         
-        # Header - fixed width for consistent look
-        box_width = 68
-        title = "CTF STATUS OVERVIEW"
-        padding = (box_width - len(title)) // 2
+        # Header - clean modern design with proper width
+        title = "⚡ CTFd ToolKit ⚡"
+        # Use 68 char width for content (70 total minus 2 box characters)
+        content_width = 68
+        title_line = title.center(content_width)
+        title_width = content_width + 2  # Add box characters back
         
-        print(f"{Colors.BOLD}{Colors.CYAN}╔{'═' * box_width}╗{Colors.RESET}")
-        print(f"{Colors.BOLD}{Colors.CYAN}║{Colors.RESET}{' ' * padding}{Colors.BOLD}{title}{Colors.RESET}{' ' * (box_width - padding - len(title))}{Colors.BOLD}{Colors.CYAN}║{Colors.RESET}")
-        print(f"{Colors.BOLD}{Colors.CYAN}╚{'═' * box_width}╝{Colors.RESET}")
-        print()
-        
-        # Category breakdown with challenges
-        print(f"  {Colors.BOLD}{Colors.BLUE}CATEGORY BREAKDOWN{Colors.RESET}")
+        print(f"{Colors.BOLD}{Colors.CYAN}╭{'─' * title_width}╮{Colors.RESET}")
+        print(f"{Colors.BOLD}{Colors.CYAN}│{Colors.BOLD}{Colors.YELLOW}{title_line}{Colors.RESET}{Colors.BOLD}{Colors.CYAN}│{Colors.RESET}")
+        print(f"{Colors.BOLD}{Colors.CYAN}╰{'─' * title_width}╯{Colors.RESET}")
         print()
         
         # Find max challenge name length for proper column width
@@ -360,7 +358,7 @@ class CTFdManager:
                 max_name_len = max(max_name_len, len(c['name']))
         
         # Fixed column widths for consistent alignment
-        cat_width = max(30, min(max_name_len, 52))  # Max 52 to fit within 68 char width
+        cat_width = max(30, min(max_name_len, 54))  # Max 54 to fit within 70 char width
         stats_width = 6  # Width for "X/Y" stats
         pct_width = 7    # Width for "(XXX.X%)" - fixed for alignment
         solves_width = 15  # Width for "XXX solves"
@@ -377,21 +375,21 @@ class CTFdManager:
             else:
                 cat_color = Colors.YELLOW
             
-            # Category header with stats - aligned with challenge solve counts
+            # Category header with consistent box characters
             stats = f"{cat_solved:>2}/{cat_total}"
             pct = f"({cat_pct:5.1f}%)"  # Fixed width 7: (XX.X%) or (XXX.X%)
             # Right-align stats and percentage together to align with "XXX solves"
             stats_pct = f"{stats:>6}  {pct:>7}"
-            print(f"  {cat_color}┌─ {Colors.BOLD}{cat:<{cat_width}}{Colors.RESET}  {stats_pct}")
+            print(f"  {cat_color}╭─ {Colors.BOLD}{cat:<{cat_width}}{Colors.RESET}  {stats_pct}")
             
             # Challenges in category - sorted by solves (most solved first)
             for c in sorted(cat_challs, key=lambda x: -x['solves']):
                 status_color = Colors.GREEN if c.get('solved_by_me') else Colors.YELLOW
-                status_icon = "●" if c.get('solved_by_me') else "○"
+                status_icon = "✓" if c.get('solved_by_me') else "✗"
                 solves_str = f"{c['solves']} solves"
                 print(f"  {cat_color}│{Colors.RESET}  {status_color}{status_icon} {c['name']:<{cat_width}} {status_color}{solves_str:>{solves_width}}{Colors.RESET}")
             
-            print(f"  {cat_color}└{Colors.RESET}")
+            print(f"  {cat_color}╰{Colors.RESET}")
             
             # Only add blank line between categories, not after the last one
             if cat != sorted(self.categories.keys())[-1]:
@@ -402,7 +400,7 @@ class CTFdManager:
         # Summary stats at the end
         print(f"  {Colors.BOLD}Total:{Colors.RESET} {total:>4}  │  {Colors.GREEN}Solved:{Colors.RESET} {solved:>4}  │  {Colors.YELLOW}Unsolved:{Colors.RESET} {total - solved:>4}  │  {Colors.YELLOW}Progress:{Colors.RESET} {percentage:>5.1f}%")
         print(f"  {Colors.DIM}{'─' * 68}{Colors.RESET}")
-        bar_width = 56
+        bar_width = 60
         filled = int(bar_width * solved / total)
         bar = f"{Colors.GREEN}{'█' * filled}{Colors.DIM}{'░' * (bar_width - filled)}{Colors.RESET}"
         print(f"  [{bar}] {solved}/{total}")
@@ -410,9 +408,9 @@ class CTFdManager:
         
         # Auto-save status to JSON (silent, no message)
         if auto_save:
-            self.save_status_json("ctfd_status.json")
+            self.save_status_json("challenge-status.json")
     
-    def save_status_json(self, output_file="ctfd_status.json"):
+    def save_status_json(self, output_file="challenge-status.json"):
         """Save challenge status to JSON file"""
         try:
             data = {
@@ -508,16 +506,16 @@ class CTFdManager:
             stats = f"{cat_solved:>2}/{cat_total}"
             pct = f"({cat_pct:5.1f}%)"
             stats_pct = f"{stats:>6}  {pct:>7}"
-            print(f"  {cat_color}┌─ {Colors.BOLD}{cat:<{cat_width}}{Colors.RESET}  {stats_pct}")
+            print(f"  {cat_color}╭─ {Colors.BOLD}{cat:<{cat_width}}{Colors.RESET}  {stats_pct}")
 
             # Challenges in category (matching status dashboard)
             for c in sorted(cat_challs, key=lambda x: -x['solves']):
                 status_color = Colors.GREEN if c.get('solved_by_me') else Colors.YELLOW
-                status_icon = "●" if c.get('solved_by_me') else "○"
+                status_icon = "✓" if c.get('solved_by_me') else "✗"
                 solves_str = f"{c['solves']} solves"
                 print(f"  {cat_color}│{Colors.RESET}  {status_color}{status_icon} {c['name']:<{cat_width}} {status_color}{solves_str:>{solves_width}}{Colors.RESET}")
 
-            print(f"  {cat_color}└{Colors.RESET}")
+            print(f"  {cat_color}╰{Colors.RESET}")
 
             # Only add blank line between categories
             if cat != sorted(by_category.keys())[-1]:
@@ -571,7 +569,7 @@ class CTFdManager:
             safe_cat = category.replace(' ', '_')
 
             # Category header (colored, matching status dashboard)
-            print(f"  {cat_color}┌─ {Colors.BOLD}{category}{Colors.RESET}")
+            print(f"  {cat_color}╭─ {Colors.BOLD}{category}{Colors.RESET}")
             
             # Process each challenge in category
             for challenge in cat_challs:
@@ -586,7 +584,7 @@ class CTFdManager:
                 # Challenge name display (green if solved, yellow if not - matching status dashboard)
                 name_display = name.replace(' ', '_')
                 status_color = Colors.GREEN if challenge.get('solved_by_me') else Colors.YELLOW
-                status_icon = "●" if challenge.get('solved_by_me') else "○"
+                status_icon = "✓" if challenge.get('solved_by_me') else "✗"
                 print(f"  {cat_color}│{Colors.RESET}  {status_color}{status_icon} {name_display}{Colors.RESET}")
 
                 # Get challenge details from API
@@ -712,13 +710,13 @@ class CTFdManager:
                     if self.verbose:
                         print(f"  {Colors.RED}[!] Error: {e}{Colors.RESET}")
 
-            print(f"  {cat_color}└{Colors.RESET}")
+            print(f"  {cat_color}╰{Colors.RESET}")
             print()
 
         print()
         
         # Auto-save status to output directory (silent, no message)
-        save_path = Path(output_dir) / "ctfd_status.json"
+        save_path = Path(output_dir) / "challenge-status.json"
         try:
             data = {
                 'timestamp': datetime.now().isoformat(),
@@ -769,7 +767,7 @@ class CTFdManager:
         else:
             return f"{size_bytes/1024/1024:.2f}MB"
     
-    def submit_flag(self, challenge_name, flag, no_notify=False):
+    def submit_flag(self, challenge_name, flag, no_notify=False, kde_connect=False):
         """Submit a flag"""
         challenge = self.find_challenge(challenge_name)
 
@@ -790,7 +788,7 @@ class CTFdManager:
         # Check if already solved
         if challenge.get('solved_by_me'):
             print(f"{Colors.YELLOW}[!] Challenge already solved{Colors.RESET}\n")
-            self.send_notification(category, chall_name, "already_solved", no_notify)
+            self.send_notification(category, chall_name, "already_solved", no_notify, kde_connect)
             return True
 
         # Get CSRF token from challenge page
@@ -833,7 +831,7 @@ class CTFdManager:
                         print(f"{Colors.GREEN}  Flag: {flag}{Colors.RESET}")
                         print(f"{Colors.GREEN}{'═' * 70}{Colors.RESET}")
                         print()
-                        self.send_notification(category, chall_name, "correct", no_notify)
+                        self.send_notification(category, chall_name, "correct", no_notify, kde_connect)
                         return True
                     else:
                         # Submission accepted but incorrect
@@ -847,7 +845,7 @@ class CTFdManager:
                         print(f"{Colors.RED}  Message: {error_msg}{Colors.RESET}")
                         print(f"{Colors.RED}{'═' * 70}{Colors.RESET}")
                         print()
-                        self.send_notification(category, chall_name, "incorrect", no_notify)
+                        self.send_notification(category, chall_name, "incorrect", no_notify, kde_connect)
                         return False
                 else:
                     print()
@@ -858,7 +856,7 @@ class CTFdManager:
                     print(f"{Colors.RED}  Flag: {flag}{Colors.RESET}")
                     print(f"{Colors.RED}{'═' * 70}{Colors.RESET}")
                     print()
-                    self.send_notification(category, chall_name, "incorrect", no_notify)
+                    self.send_notification(category, chall_name, "incorrect", no_notify, kde_connect)
                     return False
             else:
                 print(f"{Colors.RED}[!] HTTP Error: {r.status_code}{Colors.RESET}\n")
@@ -868,7 +866,7 @@ class CTFdManager:
             print(f"{Colors.RED}[!] Submission error: {e}{Colors.RESET}\n")
             return False
     
-    def send_notification(self, category, name, status, no_notify=False):
+    def send_notification(self, category, name, status, no_notify=False, kde_connect=False):
         """Send desktop and KDE Connect notification"""
         import subprocess
 
@@ -879,28 +877,32 @@ class CTFdManager:
             # Desktop notification
             if status == "correct":
                 msg = f"[{category}] {name} - SOLVED"
+                urgency = "normal"
             elif status == "incorrect":
                 msg = f"[{category}] {name} - Incorrect"
+                urgency = "low"  # Silent urgency for incorrect flags
             else:
                 msg = f"[{category}] {name} - Already solved"
+                urgency = "normal"
 
             subprocess.run([
-                "notify-send", "-u", "normal" if status == "correct" else "critical",
+                "notify-send", "--app-name=CTFd Toolkit", "-u", urgency,
                 "-i", "dialog-information", "CTF Submission", msg
             ], capture_output=True, timeout=5)
 
-            # KDE Connect
-            result = subprocess.run(
-                ["kdeconnect-cli", "--id-only", "--list-available"],
-                capture_output=True, text=True, timeout=5
-            )
-            devices = [d.strip() for d in result.stdout.strip().split('\n') if d.strip()]
+            # KDE Connect - only if explicitly enabled
+            if kde_connect:
+                result = subprocess.run(
+                    ["kdeconnect-cli", "--id-only", "--list-available"],
+                    capture_output=True, text=True, timeout=5
+                )
+                devices = [d.strip() for d in result.stdout.strip().split('\n') if d.strip()]
 
-            for device_id in devices:
-                subprocess.run([
-                    "kdeconnect-cli", "--device", device_id,
-                    "--ping-msg", f"CTF: {msg}"
-                ], capture_output=True, timeout=5)
+                for device_id in devices:
+                    subprocess.run([
+                        "kdeconnect-cli", "--device", device_id,
+                        "--ping-msg", f"CTF: {msg}"
+                    ], capture_output=True, timeout=5)
 
         except Exception as e:
             if self.verbose:
@@ -951,11 +953,24 @@ Examples:
   {script_name} -u https://ctf.example.com -U user -P pass --download -c Crypto
   {script_name} -u https://ctf.example.com -U user -P pass --submit -C "Challenge" -f "flag{{}}"
   {script_name} -u https://ctf.example.com -U user -P pass --clear-cache
+  {script_name} -u https://ctf.example.com -U user -P pass --status --save-status
 
 Environment Variables:
   CTFD_URL      Default target URL
   CTFD_USER     Default username
   CTFD_PASS     Default password
+
+Notification Behavior:
+  Default: Desktop notifications only (silent for incorrect flags)
+  --no-notify:    Disable all notifications
+  --kde-connect:  Enable KDE Connect phone notifications
+  --no-cache:     Disable session caching (login every time)
+  --save-status:   Auto-save challenge status to challenge-status.json
+  
+Notification Urgency:
+  Correct flags:     Normal (visible)
+  Incorrect flags:   Low (silent/minimal)
+  Already solved:    Normal (visible)
         '''
     )
 
@@ -1007,7 +1022,7 @@ Environment Variables:
     parser.add_argument(
         '-c', '--category',
         type=str,
-        help='Filter by category (for --list, --unsolved, --download)'
+        help='Filter by category (for --list, --unsolved, --download / -d)'
     )
 
     # Download arguments
@@ -1056,6 +1071,16 @@ Environment Variables:
         '--no-notify',
         action='store_true',
         help='Disable notifications'
+    )
+    parser.add_argument(
+        '--kde-connect',
+        action='store_true',
+        help='Enable KDE Connect notifications (disabled by default)'
+    )
+    parser.add_argument(
+        '--save-status',
+        action='store_true',
+        help='Auto-save challenge status to challenge-status.json'
     )
 
     args = parser.parse_args()
@@ -1118,17 +1143,17 @@ def main():
         manager.download_files(category_filter=args.category, output_dir=args.output)
     elif args.challenge and args.flag:
         # Submit flag (either via --submit or just -C -f together)
-        success = manager.submit_flag(args.challenge, args.flag, args.no_notify)
+        success = manager.submit_flag(args.challenge, args.flag, args.no_notify, args.kde_connect)
         sys.exit(0 if success else 1)
     elif args.status:
-        manager.show_status()
+        manager.show_status(args.save_status)
     elif args.list:
         manager.list_challenges(category_filter=args.category)
     elif args.unsolved:
         manager.list_challenges(unsolved_only=True, category_filter=args.category)
     else:
         # Default: show status
-        manager.show_status()
+        manager.show_status(args.save_status)
 
 
 if __name__ == "__main__":
