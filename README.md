@@ -22,7 +22,8 @@
 - **🔔 Multi-Device Notifications** - Desktop alerts via `notify-send` and mobile via KDE Connect integration
 - **🌍 Environment Variable Support** - `CTFD_URL`, `CTFD_USER`, `CTFD_PASS` for seamless workflow
 - **📱 KDE Connect Integration** - Get flag submission notifications on your phone
-- **🎯 Smart Terminal Detection** - Automatic terminal width detection with resize handling (SIGWINCH)
+- **🎯 Smart Terminal Detection** - Automatic terminal width detection that dynamically scales bounding boxes, progress bars, and challenge panels simultaneously.
+- **🔤 Advanced Unicode Alignment** - Smart visual length calculations that seamlessly ignore invisible Unicode tags and correctly pad wide emojis (⚡) in terminal without altering the raw challenge strings.
 - **🔐 Browser-like Headers** - Realistic browser headers for better CTFd compatibility
 - **⚡ Performance Optimized** - Efficient caching and minimal API calls
 - **🎨 Colored Help Output** - Custom help formatter with colored short flags

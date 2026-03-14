@@ -339,29 +339,42 @@ class CTFdManager:
         
         print()
         
-        # Header - clean modern design with proper width
-        title = "⚡ CTFd ToolKit ⚡"
-        # Use 68 char width for content (70 total minus 2 box characters)
-        content_width = 68
-        title_line = title.center(content_width)
-        title_width = content_width + 2  # Add box characters back
-        
-        print(f"{Colors.BOLD}{Colors.CYAN}╭{'─' * title_width}╮{Colors.RESET}")
-        print(f"{Colors.BOLD}{Colors.CYAN}│{Colors.BOLD}{Colors.YELLOW}{title_line}{Colors.RESET}{Colors.BOLD}{Colors.CYAN}│{Colors.RESET}")
-        print(f"{Colors.BOLD}{Colors.CYAN}╰{'─' * title_width}╯{Colors.RESET}")
-        print()
-        
         # Find max challenge name length for proper column width
         max_name_len = 0
         for cat_challs in self.categories.values():
             for c in cat_challs:
-                max_name_len = max(max_name_len, len(c['name']))
+                max_name_len = max(max_name_len, self._visual_len(c["name"]))
         
-        # Fixed column widths for consistent alignment
-        cat_width = max(30, min(max_name_len, 54))  # Max 54 to fit within 70 char width
-        stats_width = 6  # Width for "X/Y" stats
-        pct_width = 7    # Width for "(XXX.X%)" - fixed for alignment
+        # Dynamic column widths matching terminal and challenges
+        term_width = get_terminal_width() or 120
+        # Require at least 47 to fit the 70-char summary line (47 + 23 = 70)
+        cat_width = max(47, min(max_name_len, max(47, term_width - 25)))
+        stats_width = 6    # Width for "X/Y" stats
+        pct_width = 7      # Width for "(XXX.X%)" - fixed for alignment
         solves_width = 15  # Width for "XXX solves"
+        
+        # UI total width defined by the challenge lines
+        # '  │  ✓ ' (7) + name (cat_width) + ' ' (1) + solves (15) = cat_width + 23
+        total_width = cat_width + 23
+        
+        # Header - clean modern design dynamically matching challenge width
+        title = "⚡ CTFd ToolKit ⚡"
+        # The content of the box needs to be total_width - 2
+        # Since '╭' takes 1 char, the border '─'*content_width, and '╮' takes 1 char: 1 + content_width + 1 = total_width -> content_width = total_width - 2
+        content_width = total_width - 2
+        
+        # Emojis ⚡ often take 2 terminal columns despite len() counting them as 1.
+        # There are 2 emojis, so the display width is len(title) + 2.
+        # To make it fit visually within content_width, we subtract 2 from the padding space.
+        pad_total = max(0, content_width - len(title) - 2)
+        pad_left = pad_total // 2
+        pad_right = pad_total - pad_left
+        title_line = " " * pad_left + title + " " * pad_right
+        
+        print(f"  {Colors.BOLD}{Colors.CYAN}╭{'─' * content_width}╮{Colors.RESET}")
+        print(f"  {Colors.BOLD}{Colors.CYAN}│{Colors.BOLD}{Colors.YELLOW}{title_line}{Colors.RESET}{Colors.BOLD}{Colors.CYAN}│{Colors.RESET}")
+        print(f"  {Colors.BOLD}{Colors.CYAN}╰{'─' * content_width}╯{Colors.RESET}")
+        print()
         
         for cat in sorted(self.categories.keys()):
             cat_challs = self.categories[cat]
@@ -377,9 +390,9 @@ class CTFdManager:
             
             # Category header with consistent box characters
             stats = f"{cat_solved:>2}/{cat_total}"
-            pct = f"({cat_pct:5.1f}%)"  # Fixed width 7: (XX.X%) or (XXX.X%)
+            pct_str = f"({cat_pct:.1f}%)"
             # Right-align stats and percentage together to align with "XXX solves"
-            stats_pct = f"{stats:>6}  {pct:>7}"
+            stats_pct = f"{stats:>6}  {pct_str:>8}"
             print(f"  {cat_color}╭─ {Colors.BOLD}{cat:<{cat_width}}{Colors.RESET}  {stats_pct}")
             
             # Challenges in category - sorted by solves (most solved first)
@@ -387,7 +400,7 @@ class CTFdManager:
                 status_color = Colors.GREEN if c.get('solved_by_me') else Colors.YELLOW
                 status_icon = "✓" if c.get('solved_by_me') else "✗"
                 solves_str = f"{c['solves']} solves"
-                print(f"  {cat_color}│{Colors.RESET}  {status_color}{status_icon} {c['name']:<{cat_width}} {status_color}{solves_str:>{solves_width}}{Colors.RESET}")
+                print(f"  {cat_color}│{Colors.RESET}  {status_color}{status_icon} {self._pad_name(c["name"], cat_width)} {status_color}{solves_str:>{solves_width}}{Colors.RESET}")
             
             print(f"  {cat_color}╰{Colors.RESET}")
             
@@ -397,13 +410,29 @@ class CTFdManager:
         
         print()
         
-        # Summary stats at the end
-        print(f"  {Colors.BOLD}Total:{Colors.RESET} {total:>4}  │  {Colors.GREEN}Solved:{Colors.RESET} {solved:>4}  │  {Colors.YELLOW}Unsolved:{Colors.RESET} {total - solved:>4}  │  {Colors.YELLOW}Progress:{Colors.RESET} {percentage:>5.1f}%")
-        print(f"  {Colors.DIM}{'─' * 68}{Colors.RESET}")
-        bar_width = 60
-        filled = int(bar_width * solved / total)
+        # Summary stats at the end (centered if wider)
+        progress_color = Colors.GREEN if percentage >= 99.9 else Colors.YELLOW
+        unsolved_color = Colors.GREEN if total - solved == 0 else Colors.YELLOW
+        
+        # Calculate summary segment lengths to properly center
+        # "Total: XXXX  │  Solved: XXXX  │  Unsolved: XXXX  │  Progress: XXX.X%"
+        # Length without ANSI codes:
+        summary_len = len(f"Total: {total:>4}  │  Solved: {solved:>4}  │  Unsolved: {total - solved:>4}  │  Progress: {percentage:>5.1f}%")
+        
+        summary_text = f"{Colors.BOLD}Total:{Colors.RESET} {total:>4}  │  {Colors.GREEN}Solved:{Colors.RESET} {solved:>4}  │  {unsolved_color}Unsolved:{Colors.RESET} {total - solved:>4}  │  {progress_color}Progress:{Colors.RESET} {percentage:>5.1f}%"
+        
+        # Center taking into account the total width (minus the 2 leading spaces)
+        pad_left = max(0, (total_width - 2 - summary_len) // 2)
+        pad_str = " " * pad_left
+        print(f"  {pad_str}{summary_text}")
+        
+        print(f"  {Colors.DIM}{'─' * (total_width - 2)}{Colors.RESET}")
+        
+        stats_str = f"{solved}/{total}"
+        bar_width = max(10, total_width - 5 - len(stats_str))
+        filled = int(bar_width * solved / total) if total > 0 else 0
         bar = f"{Colors.GREEN}{'█' * filled}{Colors.DIM}{'░' * (bar_width - filled)}{Colors.RESET}"
-        print(f"  [{bar}] {solved}/{total}")
+        print(f"  [{bar}] {stats_str}")
         print()
         
         # Auto-save status to JSON (silent, no message)
@@ -479,10 +508,11 @@ class CTFdManager:
         print()
 
         # Find max challenge name length for proper column width
-        max_name_len = max(len(c['name']) for c in challenges) if challenges else 0
+        max_name_len = max(self._visual_len(c["name"]) for c in challenges) if challenges else 0
 
-        # Fixed column widths for consistent alignment (matching status dashboard)
-        cat_width = max(30, min(max_name_len, 52))
+        # Dynamic column widths matching terminal and status dashboard
+        term_width = get_terminal_width() or 120
+        cat_width = max(47, min(max_name_len, max(47, term_width - 25)))
         solves_width = 15
 
         # Group by category
@@ -504,8 +534,8 @@ class CTFdManager:
 
             # Category header with stats (matching status dashboard)
             stats = f"{cat_solved:>2}/{cat_total}"
-            pct = f"({cat_pct:5.1f}%)"
-            stats_pct = f"{stats:>6}  {pct:>7}"
+            pct_str = f"({cat_pct:.1f}%)"
+            stats_pct = f"{stats:>6}  {pct_str:>8}"
             print(f"  {cat_color}╭─ {Colors.BOLD}{cat:<{cat_width}}{Colors.RESET}  {stats_pct}")
 
             # Challenges in category (matching status dashboard)
@@ -513,7 +543,7 @@ class CTFdManager:
                 status_color = Colors.GREEN if c.get('solved_by_me') else Colors.YELLOW
                 status_icon = "✓" if c.get('solved_by_me') else "✗"
                 solves_str = f"{c['solves']} solves"
-                print(f"  {cat_color}│{Colors.RESET}  {status_color}{status_icon} {c['name']:<{cat_width}} {status_color}{solves_str:>{solves_width}}{Colors.RESET}")
+                print(f"  {cat_color}│{Colors.RESET}  {status_color}{status_icon} {self._pad_name(c["name"], cat_width)} {status_color}{solves_str:>{solves_width}}{Colors.RESET}")
 
             print(f"  {cat_color}╰{Colors.RESET}")
 
@@ -715,6 +745,16 @@ class CTFdManager:
 
         print()
     
+
+    def _visual_len(self, text):
+        import unicodedata
+        return sum(1 for c in text if unicodedata.category(c) != 'Cf')
+
+    def _pad_name(self, text, width):
+        v_len = self._visual_len(text)
+        pad = width - v_len
+        return text + " " * max(0, pad)
+
     def _format_size(self, size_bytes):
         """Format file size in human readable format"""
         if size_bytes < 1024:
