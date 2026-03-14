@@ -714,49 +714,6 @@ class CTFdManager:
             print()
 
         print()
-        
-        # Auto-save status to output directory (silent, no message)
-        save_path = Path(output_dir) / "challenge-status.json"
-        try:
-            data = {
-                'timestamp': datetime.now().isoformat(),
-                'target': self.target,
-                'username': self.username,
-                'summary': {
-                    'total': self.get_total_count(),
-                    'solved': self.get_solved_count(),
-                    'unsolved': self.get_total_count() - self.get_solved_count(),
-                    'progress_pct': round(100 * self.get_solved_count() / self.get_total_count(), 2) if self.get_total_count() > 0 else 0
-                },
-                'categories': {},
-                'challenges': []
-            }
-            
-            # Group by category
-            for cat in sorted(self.categories.keys()):
-                cat_challs = self.categories[cat]
-                cat_solved = sum(1 for c in cat_challs if c.get('solved_by_me'))
-                data['categories'][cat] = {
-                    'total': len(cat_challs),
-                    'solved': cat_solved,
-                    'progress_pct': round(100 * cat_solved / len(cat_challs), 2) if len(cat_challs) > 0 else 0
-                }
-            
-            # Add all challenges
-            for c in sorted(self.challenges, key=lambda x: (-x['solves'], x['name'])):
-                data['challenges'].append({
-                    'id': c['id'],
-                    'name': c['name'],
-                    'category': c.get('category', 'Unknown'),
-                    'solves': c['solves'],
-                    'value': c.get('value', c.get('points', 0)),
-                    'solved_by_me': c.get('solved_by_me', False)
-                })
-            
-            with open(save_path, 'w') as f:
-                json.dump(data, f, indent=2)
-        except Exception:
-            pass
     
     def _format_size(self, size_bytes):
         """Format file size in human readable format"""
